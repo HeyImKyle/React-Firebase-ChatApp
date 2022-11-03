@@ -1,37 +1,44 @@
-import React from "react";
+import React, { useContext, useEffect, useState } from "react";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase";
+import { auth } from "../firebase";
+import { AuthContext } from "../context/AuthContext";
+import { ChatContext } from "../context/ChatConext";
 const Chats = () => {
+  const [chats, setChats] = useState([]);
+  const { currentUser } = useContext(AuthContext);
+  const { dispatch } = useContext(ChatContext);
+  useEffect(() => {
+    const getChats = () => {
+      const unsub = onSnapshot(doc(db, "userChats", currentUser.uid), (doc) => {
+        setChats(doc.data());
+      });
+      return () => {
+        unsub();
+      };
+    };
+    currentUser.uid && getChats();
+  }, [currentUser.uid]);
+  const handleSelect = (u) => {
+    dispatch({ type: "CHANGE_USER", payload: u });
+  };
   return (
     <div className="chats">
-      <div className="userChat">
-        <img
-          src="https://media.istockphoto.com/photos/mom-and-son-having-fun-outdoor-picture-id1035146258?k=20&m=1035146258&s=612x612&w=0&h=YBcP5MGW_RDEU6oyUEpksPwP4Hks4oS5s_IbKESc7Jg="
-          alt=""
-        />
-        <div className="userChatInfo">
-          <span>Jane</span>
-          <p>Hello</p>
-        </div>
-      </div>
-      <div className="userChat">
-        <img
-          src="https://media.istockphoto.com/photos/mom-and-son-having-fun-outdoor-picture-id1035146258?k=20&m=1035146258&s=612x612&w=0&h=YBcP5MGW_RDEU6oyUEpksPwP4Hks4oS5s_IbKESc7Jg="
-          alt=""
-        />
-        <div className="userChatInfo">
-          <span>Jane</span>
-          <p>Hello</p>
-        </div>
-      </div>
-      <div className="userChat">
-        <img
-          src="https://media.istockphoto.com/photos/mom-and-son-having-fun-outdoor-picture-id1035146258?k=20&m=1035146258&s=612x612&w=0&h=YBcP5MGW_RDEU6oyUEpksPwP4Hks4oS5s_IbKESc7Jg="
-          alt=""
-        />
-        <div className="userChatInfo">
-          <span>Jane</span>
-          <p>Hello</p>
-        </div>
-      </div>
+      {Object.entries(chats)
+        ?.sort((a, b) => b[1].date - a[1].date)
+        .map((chat) => (
+          <div
+            className="userChat"
+            key={chat[0]}
+            onClick={() => handleSelect(chat[1].userInfo)}
+          >
+            <img src={chat[1].userInfo.photoURL} alt="" />
+            <div className="userChatInfo">
+              <span>{chat[1].userInfo.displayName}</span>
+              <p>{chat[1].lastMessage?.text}</p>
+            </div>
+          </div>
+        ))}
     </div>
   );
 };
