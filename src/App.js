@@ -6,7 +6,6 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Link,
   Navigate,
 } from "react-router-dom";
 import { useContext } from "react";
@@ -17,6 +16,7 @@ function App() {
     if (!currentUser) {
       return <Navigate to="/login" />;
     }
+    return children;
   };
   return (
     <Router>
